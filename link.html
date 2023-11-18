@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Song Player</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      margin: 20px;
+      background-color: #f7f7f7;
+      color: #333;
+      transition: background-color 0.5s, color 0.5s;
+    }
+
+    body.dark-mode {
+      background-color: #333;
+      color: #fff;
+    }
+
+    h1 {
+      color: #000;
+    }
+
+    #darkModeBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      background-color: #000;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+    }
+
+    #controls {
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 15px;
+      margin: 10px;
+      font-size: 18px;
+      cursor: pointer;
+      background-color: #000; /* Updated to gray */
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+    }
+
+    #progressBar {
+      width: 70%;
+      height: 30px;
+      background-color: #ddd;
+      margin-top: 30px;
+      position: relative;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    #progress {
+      height: 100%;
+      width: 0;
+      background-color: #2ecc71;
+      position: absolute;
+    }
+
+    #songInfo {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <button id="darkModeBtn" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+
+  <h1>Random Song Player</h1>
+
+  <label for="folderInput" style="font-size: 18px; color: #000;">Select a folder:</label>
+  <input type="file" id="folderInput" webkitdirectory directory multiple onchange="handleFolderSelection(this)"
+    style="display: block; margin: 10px auto; padding: 10px; font-size: 16px; border-radius: 5px;">
+
+  <div id="controls">
+    <button onclick="playRandomAudio()">Play</button>
+    <button onclick="toggleAudio()">Pause/Resume</button>
+    <button onclick="toggleAutoPlay()">Auto Play</button>
+    <button onclick="toggleMute()">Mute</button>
+  </div>
+
+  <div id="progressBar">
+    <div id="progress"></div>
+  </div>
+
+  <div id="songInfo"></div>
+
+  <script>
+    const audio = new Audio();
+    const progressBar = document.getElementById('progress');
+    const songInfo = document.getElementById('songInfo');
+    let autoPlayEnabled = false;
+    let folderSelected = false;
+
+    function handleFolderSelection(input) {
+      if (!folderSelected) {
+        folderSelected = true;
+        input.disabled = true;
+      }
+    }
+
+    function playRandomAudio() {
+      const files = Array.from(document.getElementById('folderInput').files);
+      const mp3Files = files.filter(file => file.name.toLowerCase().endsWith('.mp3'));
+
+      if (mp3Files.length > 0) {
+        const randomIndex = Math.floor(Math.random() * mp3Files.length);
+        const randomAudio = URL.createObjectURL(mp3Files[randomIndex]);
+
+        audio.src = randomAudio;
+        audio.play();
+        updateSongInfo(mp3Files[randomIndex].name);
+
+        audio.addEventListener('timeupdate', () => {
+          const percentage = (audio.currentTime / audio.duration) * 100;
+          progressBar.style.width = percentage + '%';
+          updateSongInfo(`${mp3Files[randomIndex].name} - ${formatTime(audio.currentTime)}/${formatTime(audio.duration)}`);
+        });
+
+        audio.addEventListener('ended', () => autoPlayEnabled && playRandomAudio());
+      } else {
+        alert('No MP3 files found in the selected folder.');
+      }
+    }
+
+    function toggleAudio() {
+      audio.paused ? audio.play() : audio.pause();
+    }
+
+    function toggleAutoPlay() {
+      autoPlayEnabled = !autoPlayEnabled;
+      alert('Auto Play ' + (autoPlayEnabled ? 'Enabled' : 'Disabled'));
+    }
+
+    function toggleMute() {
+      audio.muted = !audio.muted;
+      alert('Audio ' + (audio.muted ? 'Muted' : 'Unmuted'));
+    }
+
+    function formatTime(time) {
+      const minutes = Math.floor(time / 60);
+      const seconds = Math.floor(time % 60);
+      return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    function updateSongInfo(info) {
+      songInfo.innerText = info;
+    }
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+    }
+  </script>
+</body>
+
+</html>
